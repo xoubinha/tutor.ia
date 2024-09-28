@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.schemas.conversation import ConversationRequest, ConversationResponse
+from schemas.conversation import ConversationRequest, ConversationResponse
 
 router = APIRouter()
 
