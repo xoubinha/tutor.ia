@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "tutoria-processdocs"
+version = "0.0.1"
+description = "This is a project that processes documents"
+authors = ["Sara San Luís Rodríguez, Christian Carballo Lozano"]
+readme = "README.md"
+keywords = ["tutor.ia", "document-intelligence"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.7.1"
+pydantic-settings = "^2.2.1"
+azure-storage-blob = "^12.20.0"
+azure-ai-documentintelligence = "^1.0.0b3"
+azure-identity = "^1.17.1"
+tiktoken = "^0.7.0"
+aiohttp = "^3.9.5"
+azure-search-documents = "11.4.0"
+openai = "1.45.1"
+
+[tool.poetry.group.dev.dependencies]
+pyclean = "^3.0.0"
+ruff = "^0.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
