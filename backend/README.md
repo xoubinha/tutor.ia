@@ -83,10 +83,10 @@ Here's the structure of the repository:
 
 ### Running the Application
 
-Start the application using Uvicorn:
+Start the application using Uvicorn from the `app` folder:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn main:app --reload
 ```
 
 The application will be accessible at `http://localhost:8000`.
