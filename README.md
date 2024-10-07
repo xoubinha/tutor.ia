@@ -28,3 +28,13 @@ The repository is organized into several key directories, each responsible for a
 - Poetry (Python package manager)
 - Azure subscription
 - Vite with React
+
+
+## Contributors
+- [Christian](https://twitter.com/ccarballolozano)
+- [Sara](https://twitter.com/sara_sanluis)
+
+If you'd like to contribute to this repository by adding more demo projects or improving existing ones, feel free to fork the repository, make your changes, and submit a pull request explaining your changes. We welcome contributions from the community!
+
+## Disclaimer
+This project is provided as-is with no warranty or guarantee of its performance or results. Use at your own risk.
