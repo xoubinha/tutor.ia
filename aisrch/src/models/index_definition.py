@@ -2,6 +2,7 @@ from azure.search.documents.indexes.models import (
     SearchIndex,
     SimpleField,
     SearchableField,
+    SearchField,
     SearchFieldDataType,
     ScoringProfile,
     TextWeights,
@@ -105,14 +106,9 @@ def get_index_schema() -> SearchIndex:
             sortable=False,
             facetable=False,
         ),
-        SearchableField(
+        SearchField(
             name="embeddings",
             type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
-            searchable=True,
-            filterable=False,
-            retrievable=False,
-            sortable=False,
-            facetable=False,
             vector_search_dimensions=3072,
             vector_search_profile_name="vector-search",
         ),
@@ -171,7 +167,7 @@ def get_index_schema() -> SearchIndex:
     )
 
     index = SearchIndex(
-        name="psychology-idx",
+        name=settings.azure_search_index_name,
         fields=fields,
         scoring_profiles=scoring_profiles,
         similarity=similarity,

@@ -6,6 +6,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     azure_search_endpoint: str
     azure_search_admin_key: str
+    azure_search_index_name: str
+    azure_search_indexer_name: str
+    azure_search_datasource_name: str
+    azure_search_skillset_name: str
     azure_storage_connection_string: str
     azure_storage_container_name: str
     azure_cognitive_services_key: str
