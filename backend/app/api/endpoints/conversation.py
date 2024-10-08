@@ -56,12 +56,8 @@ class ChatHistory:
 chat_history = ChatHistory()
 
 
-@router.post("/", response_model=ConversationResponse)
+@router.post("", response_model=ConversationResponse)
 def handle_conversation(request: ConversationRequest):
-    print(
-        f"Received prompt: {request.prompt} with conversation ID: {request.conversation_id}"
-    )
-
     # Reformulate the question based on the conversation history
     conversation = chat_history.get_conversation(request.conversation_id)
     condense_completion = openai_client.chat.completions.create(
