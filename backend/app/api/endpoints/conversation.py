@@ -4,7 +4,6 @@ from azure.search.documents import SearchClient
 from dotenv import load_dotenv
 from fastapi import APIRouter
 from openai import AzureOpenAI
-from uuid import UUID
 from schemas.conversation import ConversationRequest, ConversationResponse
 from api.utils.prompts import (
     CONDENSE_SYSTEM_PROMPT,
@@ -61,7 +60,7 @@ def handle_conversation(request: ConversationRequest):
     # Reformulate the question based on the conversation history
     conversation = chat_history.get_conversation(request.conversation_id)
     condense_completion = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=os.environ["AZURE_OPENAI_MODEL"],
         messages=[
             {"role": "system", "content": CONDENSE_SYSTEM_PROMPT},
             {
@@ -102,7 +101,7 @@ def handle_conversation(request: ConversationRequest):
         }
     )
     answer_completion = openai_client.chat.completions.create(
-        model="gpt-4o-mini", messages=messages
+        model=os.environ["AZURE_OPENAI_MODEL"], messages=messages
     )
     answer_text = answer_completion.choices[0].message.content
 
