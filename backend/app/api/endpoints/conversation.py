@@ -1,6 +1,7 @@
 import os
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
+from azure.search.documents.models import VectorizedQuery
 from dotenv import load_dotenv
 from fastapi import APIRouter
 from openai import AzureOpenAI
@@ -81,7 +82,23 @@ def handle_conversation(request: ConversationRequest):
     query = condense_completion.choices[0].message.content
     print(f"Reformulated query: {query}")
 
-    search_results = search_client.search(search_text=query, top=3)
+    query_embedding = openai_client.embeddings.create(
+        input=query,
+        model="text-embedding-3-large",
+    )
+
+    search_results = search_client.search(
+        search_text=query,
+        vector_queries=[
+            VectorizedQuery(
+                vector=query_embedding.data[0].embedding,
+                exhaustive=False,
+                k_nearest_neighbors=5,
+                fields="embeddings",
+            )
+        ],
+        top=5,
+    )
 
     messages = [
         {
