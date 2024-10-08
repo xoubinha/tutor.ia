@@ -11,6 +11,9 @@ package-mode = false
 python = "^3.11"
 fastapi = "0.111.0"
 uvicorn = "^0.29.0"
+openai = "^1.51.0"
+python-dotenv = "^1.0.1"
+azure-search-documents = "^11.5.1"
 
 [tool.poetry.group.dev.dependencies]
 pyclean = "^3.0.0"
