@@ -6,6 +6,12 @@ from fastapi import APIRouter
 from openai import AzureOpenAI
 from uuid import UUID
 from schemas.conversation import ConversationRequest, ConversationResponse
+from api.utils.prompts import (
+    CONDENSE_SYSTEM_PROMPT,
+    CONDENSE_USER_PROMPT,
+    ANSWERING_SYSTEM_PROMPT,
+    ANSWERING_USER_PROMPT,
+)
 
 router = APIRouter()
 
@@ -23,67 +29,31 @@ search_client = SearchClient(
     credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_API_KEY")),
 )
 
-conversation_memory = {}
 
-system_prompt = "You are a helpful assistant."
+class ChatHistory:
+    def __init__(self):
+        self.conversations: dict = {}
 
+    def get_conversation(self, conversation_id: any) -> list:
+        if conversation_id in self.conversations:
+            return self.conversations[conversation_id]
+        else:
+            return []
 
-def init_conversation_memory(
-    system_prompt: str, conversation_id: UUID, conversation_memory: dict
-):
-    memory = [{"role": "system", "content": system_prompt}]
-    conversation_memory[conversation_id] = memory
-    return memory
+    def delete_conversation(self, conversation_id: any):
+        if conversation_id in self.conversations:
+            del self.conversations[conversation_id]
 
+    def delete_all_conversations(self):
+        self.conversations = {}
 
-def get_conversation_memory(conversation_id: UUID, conversation_memory: dict = None):
-    if conversation_id in conversation_memory:
-        return conversation_memory[conversation_id]
-    else:
-        return []
-
-
-def update_conversation_memory(
-    conversation_id: UUID, message: dict, conversation_memory: dict
-) -> None:
-    conversation_memory[conversation_id].append(message)
+    def update_conversation(self, conversation_id: any, messages: list[dict]):
+        if conversation_id not in self.conversations:
+            self.conversations[conversation_id] = []
+        self.conversations[conversation_id] += messages
 
 
-def reformulate_query(query: str, memory: dict) -> str:
-    previous_context = "\n".join(
-        [
-            f'{message["role"]}: {message["content"]}'
-            for message in memory
-            if message["role"] == "user"
-        ]
-    )
-    REFORMULATE_PROMPT = """
-    You are assisting a user in finding information in Azure AI Search.
-    The context from the conversation so far is the following: 
-
-    {previous_context}
-
-    Based on this context, reformulate the following question to optimize it for document search, 
-    making it more specific, clearer, and focused on retrieving the most relevant information:
-
-    Original Question: '{query}'
-    
-    Your reformulated query should capture the essence of the user's intent, avoid ambiguity, 
-    and ensure that the search results will include precise information.
-    """
-    response = openai_client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {
-                "role": "user",
-                "content": REFORMULATE_PROMPT.format(
-                    query=query, previous_context=previous_context
-                ).strip(),
-            }
-        ],
-    )
-    reformulated_query = response.choices[0].message.content
-    return reformulated_query
+chat_history = ChatHistory()
 
 
 @router.post("/", response_model=ConversationResponse)
@@ -92,40 +62,56 @@ def handle_conversation(request: ConversationRequest):
         f"Received prompt: {request.prompt} with conversation ID: {request.conversation_id}"
     )
 
-    if request.conversation_id not in conversation_memory:
-        init_conversation_memory(
-            system_prompt, request.conversation_id, conversation_memory
-        )
-    messages = get_conversation_memory(request.conversation_id, conversation_memory)
-    user_message = {"role": "user", "content": request.prompt}
-    messages += [user_message]
-
-    reformulated_query = reformulate_query(request.prompt, messages)
-    print(f"Reformulated query: {reformulated_query}")
-
-    search_results = search_client.search(search_text=reformulated_query, top=3)
-
-    GROUNDED_PROMPT = """
-    You are a teaching assistant that anwers questions using the information provided in the sources.
-    Answer the query using only the sources provided below in a friendly and concise manner.
-    Answer ONLY with the information listed in the list of sources below.
-    If there isn't enough information below, say you don't know.
-    Do not generate answers that don't use the sources below.
-    Query: {query}
-    Sources:\n{sources}
-    """
-    completion = openai_client.chat.completions.create(
-        model="gpt-4o",
+    # Reformulate the question based on the conversation history
+    conversation = chat_history.get_conversation(request.conversation_id)
+    condense_completion = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
         messages=[
+            {"role": "system", "content": CONDENSE_SYSTEM_PROMPT},
             {
                 "role": "user",
-                "content": GROUNDED_PROMPT.format(
-                    query=request.prompt,
-                    sources="\n".join([result["content"] for result in search_results]),
-                ),
-            }
+                "content": CONDENSE_USER_PROMPT.format(
+                    question=request.prompt,
+                    chat_history="\n".join(
+                        [
+                            f"{message['role']}: {message['content']}"
+                            for message in conversation
+                        ]
+                    ),
+                ).strip(),
+            },
         ],
     )
-    completion_text = completion.choices[0].message.content
-    print(f"Completion text: {completion_text}")
-    return ConversationResponse(response=completion_text)
+
+    query = condense_completion.choices[0].message.content
+    print(f"Reformulated query: {query}")
+
+    search_results = search_client.search(search_text=query, top=3)
+
+    messages = [
+        {
+            "role": "system",
+            "content": ANSWERING_SYSTEM_PROMPT,
+        },
+    ]
+    for message in chat_history.get_conversation(request.conversation_id):
+        messages.append({"role": message["role"], "content": message["content"]})
+    messages.append(
+        {
+            "role": "user",
+            "content": ANSWERING_USER_PROMPT.format(
+                sources=[source for source in search_results],
+                question=request.prompt,
+            ),
+        }
+    )
+    answer_completion = openai_client.chat.completions.create(
+        model="gpt-4o-mini", messages=messages
+    )
+    answer_text = answer_completion.choices[0].message.content
+
+    chat_history.update_conversation(
+        request.conversation_id, [{"role": "user", "content": request.prompt}]
+    )
+    print(f"Answer: {answer_text}")
+    return ConversationResponse(response=answer_text)
