@@ -68,8 +68,8 @@ def reformulate_query(query: str, memory: dict) -> str:
 
     Original Question: '{query}'
     
-    Your reformulated query should capture the essence of the user's intent, avoid ambiguity, 
-    and ensure that the search results will include precise information.
+    Your reformulated query should capture the most relevant words and be concise to be effective
+    as search query for Azure AI Search Index. Avoid using punctuation or special characters.
     """
     response = openai_client.chat.completions.create(
         model="gpt-4o",
@@ -88,9 +88,6 @@ def reformulate_query(query: str, memory: dict) -> str:
 
 @router.post("/", response_model=ConversationResponse)
 def handle_conversation(request: ConversationRequest):
-    print(
-        f"Received prompt: {request.prompt} with conversation ID: {request.conversation_id}"
-    )
 
     if request.conversation_id not in conversation_memory:
         init_conversation_memory(
@@ -113,15 +110,18 @@ def handle_conversation(request: ConversationRequest):
     Do not generate answers that don't use the sources below.
     Query: {query}
     Sources:\n{sources}
+
+    At the end of each answer, include the storage_url field in markdown format, followed by the page number in the format #page=<page field + 2>. For example:
+    [url](storage_url#page=<page field>)
     """
     completion = openai_client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "user",
                 "content": GROUNDED_PROMPT.format(
                     query=request.prompt,
-                    sources="\n".join([result["content"] for result in search_results]),
+                    sources=[result for result in search_results],
                 ),
             }
         ],
