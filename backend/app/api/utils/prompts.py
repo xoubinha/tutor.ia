@@ -18,5 +18,5 @@ ANSWERING_USER_PROMPT = """
 ## User Question
 Use the Retrieved Documents and the chat history to answer the question: {question}
 ## Answer format
-After the answer, include always the field "Fuentes:" and inside this field the storage_url field in markdown format, followed by the page number in the format #page=<page field + 2>. It should always have the following format: [filename, (pág. <page + 2>)](storage_url#page=<page field +2>)
+After the answer, include always the field "Fuentes:" inside this field you should put the storage_url field in markdown format. It should always have the following format: [filename, (pág. <page-number>)](storage_url#page=<page-number>). The page-number should be computed by adding 2 to the page field.
 """
