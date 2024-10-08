@@ -107,7 +107,11 @@ def handle_conversation(request: ConversationRequest):
     answer_text = answer_completion.choices[0].message.content
 
     chat_history.update_conversation(
-        request.conversation_id, [{"role": "user", "content": request.prompt}]
+        request.conversation_id,
+        [
+            {"role": "user", "content": request.prompt},
+            {"role": "assistant", "content": answer_text},
+        ],
     )
     print(f"Answer: {answer_text}")
     return ConversationResponse(response=answer_text)
