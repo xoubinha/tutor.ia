@@ -215,7 +215,7 @@ const Chat = () => {
               style={{ marginBottom: isLoading ? "40px" : "0px" }}
             >
               {answers.map((answer, index) => (
-                <>
+                 <div key={index}>
                   {answer.role === "user" ? (
                     <div className={styles.chatMessageUser}>
                       <div className={styles.chatMessageUserMessage}>
@@ -241,7 +241,7 @@ const Chat = () => {
                       />
                     </div>
                   ) : null}
-                </>
+                </div>
               ))}
               {showLoadingMessage && (
                 <>
