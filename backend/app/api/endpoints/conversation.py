@@ -86,7 +86,7 @@ def reformulate_query(query: str, memory: dict) -> str:
     return reformulated_query
 
 
-@router.post("/", response_model=ConversationResponse)
+@router.post("", response_model=ConversationResponse)
 def handle_conversation(request: ConversationRequest):
 
     if request.conversation_id not in conversation_memory:
