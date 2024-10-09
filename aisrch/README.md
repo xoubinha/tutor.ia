@@ -89,11 +89,7 @@ Create an Azure Search index given the schemas defined in `src/models` by runnin
 python main.py
 ```
 
-## Contributors
-- [Christian](https://twitter.com/ccarballolozano)
-- [Sara](https://twitter.com/sara_sanluis)
-
-If you'd like to contribute to this repository by adding more demo projects or improving existing ones, feel free to fork the repository, make your changes, and submit a pull request explaining your changes. We welcome contributions from the community!
+The result will be uploaded to the same Storage Account to the specified path.
 
 ## Disclaimer
 This project is provided as-is with no warranty or guarantee of its performance or results. Use at your own risk.
