@@ -12,6 +12,7 @@ from api.utils.prompts import (
     ANSWERING_SYSTEM_PROMPT,
     ANSWERING_USER_PROMPT,
 )
+from api.utils import get_subject
 
 router = APIRouter()
 
@@ -55,10 +56,9 @@ class ChatHistory:
 
 chat_history = ChatHistory()
 
-
 @router.post("", response_model=ConversationResponse)
 def handle_conversation(request: ConversationRequest):
-    # Reformulate the question based on the conversation history
+    subject = get_subject(request.prompt)
     conversation = chat_history.get_conversation(request.conversation_id)
     condense_completion = openai_client.chat.completions.create(
         model=os.environ["AZURE_OPENAI_MODEL"],
@@ -97,9 +97,9 @@ def handle_conversation(request: ConversationRequest):
                 fields="embeddings",
             )
         ],
+        filter = f"subject eq '{subject}'" if subject else None,
         top=5,
     )
-
     messages = [
         {
             "role": "system",
