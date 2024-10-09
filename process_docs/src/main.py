@@ -7,8 +7,6 @@ from features.splitters import SentenceTextSplitter
 from features.configuration import get_app_settings
 from features.storage import AzureStorageAccount
 from azure.core.credentials import AzureKeyCredential
-from azure.search.documents import SearchClient
-
 
 def parse_file(
     file: File, parser: DocumentAnalysisParser, splitter: SentenceTextSplitter
@@ -58,7 +56,6 @@ def main():
                 for i in range(0, len(sections), MAX_BATCH_SIZE)
             ]
 
-            print(len(section_batches))
             for batch_index, batch in enumerate(section_batches):
                 for section_index, section in enumerate(batch):
                     document = {
@@ -83,31 +80,6 @@ def main():
                         data=document,
                         blob_name=f"{ "/".join(file.url.split("/")[4:7])}/processed/{section.content.filename()}-{section_index}-parsed.json",
                     )
-            #     documents = [
-            #         {
-            #             "id": f"{section.content.filename_to_id()}-page-{section_index + batch_index * MAX_BATCH_SIZE}",
-            #             "subject": file.url.split("/")[6],
-            #             "type": file.url.split("/")[7],
-            #             "storage_url": file.url,
-            #             "title": section.content.filename(),
-            #             "chapter": "",
-            #             "section": "",
-            #             "page": str(section.split_page.page_num),
-            #             "content": re.sub(
-            #                 r"<[^>]*>|<!--.*?-->|\\n+",
-            #                 " ",
-            #                 section.split_page.text,
-            #                 flags=re.DOTALL,
-            #             )
-            #             .strip()
-            #             .replace("\n", " "),
-            #         }
-            #         for section_index, section in enumerate(batch)
-            #     ]
-            # storage_account.upload_blob(
-            #     data=documents,
-            #     blob_name=f"{ "/".join(file.url.split("/")[4:7])}/processed/{file.filename()}-parsed.json",
-            # )
 
 
 if __name__ == "__main__":
