@@ -1,6 +1,9 @@
-# Introduction
+# Tutor.ia
+An AI-powered virtual assistant designed to enhance the learning process through generative AI.
 
-This repository creates the search index in [Azure AI Search](https://learn.microsoft.com/en-us/azure/search/search-what-is-azure-search) for Tutor.ia
+## Overview
+
+This repository contains the code for creating the search index in [Azure AI Search](https://learn.microsoft.com/en-us/azure/search/search-what-is-azure-search) for the Tutor.IA project. It is designed to efficiently manage and index data, enabling powerful search capabilities. The implementation follows a structured approach to ensure seamless data retrieval and search functionality.
 
 ## Project Structure
 
@@ -31,7 +34,9 @@ This section provides an overview of the directory structure for the Tutor.ia pr
 - **pyproject.toml**: Configuration file for Poetry and other build tools. It specifies project metadata, dependencies, scripts, and other settings necessary for building and managing the project.
 - **README.md**: Project documentation.
 
-## Set the environment variables
+## Getting started 
+
+### Set the environment variables
 
 Environment variables are key-value pairs that are accessible to any program running within the environment in which they are set. These variables often contain sensitive information such as API keys, database credentials, or configuration settings. To set them up, just copy the `.env.template` file and make a new file called `.env`. Then, fill in the blanks with the appropiate info, each variable is explained in the below table:
 
@@ -51,10 +56,40 @@ Environment variables are key-value pairs that are accessible to any program run
 | OPENAI_EMBEDDINGS_DEPLOYMENT_ID             | Deployment ID for the OpenAI embeddings model.                                                             |
 | OPENAI_EMBEDDINGS_MODEL_NAME                | Name of the OpenAI embeddings model to be used.                                                            |
 
+### Installation
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/xoubinha/tutor.ia.git
+   ```
+
+2. **Navigate to the Project Directory**
+
+   ```bash
+   cd <your_project_path>
+   ```
+
+3. **Create a Virtual Environment and Install the Dependencies**
+
+   ```bash
+   poetry install
+   ```
+
+4. **Activate the Virtual Environment**
+
+     ```bash
+     poetry shell
+     ```
 
 ## Create assets in Azure Search
 
 Create an Azure Search index given the schemas defined in `src/models` by running the following command:
 ```bash
-poetry run main.py
+python main.py
 ```
+
+The result will be uploaded to the same Storage Account to the specified path.
+
+## Disclaimer
+This project is provided as-is with no warranty or guarantee of its performance or results. Use at your own risk.
