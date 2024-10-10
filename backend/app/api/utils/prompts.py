@@ -16,5 +16,5 @@ ANSWERING_USER_PROMPT = """
 Use the Retrieved Documents and the chat history to answer the question: {question}
 ## Answer format
 After the answer, include always the field "Fuentes:" inside this field you should put the storage_url field in markdown format. It should always have the following format: [filename, (pág. <page-number>)](storage_url#page=<page-number>). The page-number should be computed by adding 1 to the page field. 
-The storage_url included in "Fuentes" must be the one from the source that contains the most relevant information used to answer the question.
+The storage_url included in "Fuentes" must be the storage_url of the source that has the key information to answer the question, or the most relevant iformation.
 """
