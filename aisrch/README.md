@@ -73,14 +73,15 @@ Environment variables are key-value pairs that are accessible to any program run
 3. **Create a Virtual Environment and Install the Dependencies**
 
    ```bash
-   poetry install
+   uv sync
    ```
 
 4. **Activate the Virtual Environment**
 
-     ```bash
-     poetry shell
-     ```
+   ```bash
+    .venv\Scripts\activate
+   ```
+
 
 ## Create assets in Azure Search
 

@@ -68,13 +68,13 @@ Environment variables are key-value pairs that are accessible to any program run
 3. **Create a Virtual Environment and Install the Dependencies**
 
    ```bash
-   poetry install
+   uv sync
    ```
 
 4. **Activate the Virtual Environment**
 
      ```bash
-     poetry shell
+    .venv\Scripts\activate
      ```
 
 ## Process the documents with Document Intelligence
