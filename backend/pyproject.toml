@@ -15,6 +15,8 @@ dependencies = [
     "openai>=1.51.0,<2",
     "python-dotenv>=1.0.1,<2",
     "azure-search-documents>=11.5.1,<12",
+    "promptflow-azure==1.17.2",
+    "promptflow-tools==1.6.0",
 ]
 
 [dependency-groups]

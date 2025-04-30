@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from api.endpoints import health, conversation
 from fastapi.middleware.cors import CORSMiddleware
+from promptflow.tracing import start_trace
 
+
+start_trace(collection="tutoria - pf")
 app = FastAPI()
 
-origins = [
-     "http://localhost:5173",
-    "http://127.0.0.1:5173"
-]
+origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 app.add_middleware(
     CORSMiddleware,
