@@ -1,6 +1,8 @@
 import os
+import logging
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
+from azure.search.documents.models import VectorizedQuery
 from dotenv import load_dotenv
 from fastapi import APIRouter
 from openai import AzureOpenAI
@@ -11,6 +13,9 @@ from api.utils.prompts import (
     ANSWERING_SYSTEM_PROMPT,
     ANSWERING_USER_PROMPT,
 )
+from api.utils import get_subject
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter()
 
@@ -57,7 +62,7 @@ chat_history = ChatHistory()
 
 @router.post("", response_model=ConversationResponse)
 def handle_conversation(request: ConversationRequest):
-    # Reformulate the question based on the conversation history
+    subject = get_subject(request.prompt)
     conversation = chat_history.get_conversation(request.conversation_id)
     condense_completion = openai_client.chat.completions.create(
         model=os.environ["AZURE_OPENAI_MODEL"],
@@ -79,10 +84,32 @@ def handle_conversation(request: ConversationRequest):
     )
 
     query = condense_completion.choices[0].message.content
-    print(f"Reformulated query: {query}")
+    logger.info(f"Reformulated query: {query}")
 
-    search_results = search_client.search(search_text=query, top=3)
+    query_embedding = openai_client.embeddings.create(
+        input=query,
+        model="text-embedding-3-large",
+    )
 
+    search_results = search_client.search(
+        search_text=query,
+        vector_queries=[
+            VectorizedQuery(
+                vector=query_embedding.data[0].embedding,
+                exhaustive=False,
+                k_nearest_neighbors=5,
+                fields="embeddings",
+            )
+        ],
+        select="storage_url,title,page,content",
+        filter=f"subject eq '{subject}'" if subject else None,
+        top=5,
+    )
+    sources = [source for source in search_results]
+    for i, source in enumerate(sources):
+        logger.info(
+            f"Source {i + 1}: \nTitle: {source['title']}\nPage: {source['page']}\nContent: {source['content']}"
+        )
     messages = [
         {
             "role": "system",
@@ -95,7 +122,10 @@ def handle_conversation(request: ConversationRequest):
         {
             "role": "user",
             "content": ANSWERING_USER_PROMPT.format(
-                sources=[source for source in search_results],
+                sources=[
+                    f"Source {i + 1}: \ntitle: {source['title']}\npage: {source['page']}\nstorage_url: {source['storage_url']}\ncontent: {source['content']}"
+                    for i, source in enumerate(sources)
+                ],
                 question=request.prompt,
             ),
         }
@@ -112,5 +142,5 @@ def handle_conversation(request: ConversationRequest):
             {"role": "assistant", "content": answer_text},
         ],
     )
-    print(f"Answer: {answer_text}")
+    logger.info(f"Answer:\n{answer_text}")
     return ConversationResponse(response=answer_text)
