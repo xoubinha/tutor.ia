@@ -1,0 +1,8 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.253
+    hooks:
+      - id: ruff
+        name: Ruff check
+        language_version: python3
+        files: \.py$
