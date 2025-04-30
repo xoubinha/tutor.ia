@@ -52,7 +52,7 @@ The project follows this structure:
 ### Prerequisites
 
 - Python 3.11 or higher
-- Poetry (Python package manager)
+- [UV](https://docs.astral.sh/uv/) (Python package manager)
 
 ### Installation
 
@@ -71,13 +71,13 @@ The project follows this structure:
 3. **Create a Virtual Environment and Install the Dependencies**
 
    ```bash
-   poetry install
+   uv venv
    ```
 
 4. **Activate the Virtual Environment**
 
      ```bash
-     poetry shell
+    .venv\Scripts\activate
      ```
 
 ### Set the environment variables
