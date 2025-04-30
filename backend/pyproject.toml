@@ -17,6 +17,7 @@ dependencies = [
     "azure-search-documents>=11.5.1,<12",
     "promptflow-azure==1.17.2",
     "promptflow-tools==1.6.0",
+    "pre-commit>=4.2.0",
 ]
 
 [dependency-groups]
