@@ -6,6 +6,7 @@ from azure.search.documents.models import VectorizedQuery
 from dotenv import load_dotenv
 from fastapi import APIRouter
 from openai import AzureOpenAI
+from promptflow.tracing import trace
 from schemas.conversation import ConversationRequest, ConversationResponse
 from api.utils.prompts import (
     CONDENSE_SYSTEM_PROMPT,
@@ -60,6 +61,7 @@ class ChatHistory:
 chat_history = ChatHistory()
 
 
+@trace
 @router.post("", response_model=ConversationResponse)
 def handle_conversation(request: ConversationRequest):
     subject = get_subject(request.prompt)
