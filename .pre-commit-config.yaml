@@ -6,3 +6,12 @@ repos:
         name: Ruff check
         language_version: python3
         files: \.py$
+  # - repo: https://github.com/xoubinha/aiguru-hooks
+  #   rev: v0.0.1
+  #   hooks:
+  #     - id: aiguru-commit-msg
+
+  # - repo: https://github.com/AliYmn/conventional-commits-check
+  #   rev: v2.9.0
+  #   hooks:
+  #     - id: conventional-commits-check

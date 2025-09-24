@@ -8,6 +8,7 @@ from azure.search.documents.indexes.models import (
     TextWeights,
     SemanticConfiguration,
     SemanticPrioritizedFields,
+    SemanticSearch,
     SemanticField,
     VectorSearch,
     HnswAlgorithmConfiguration,
@@ -135,6 +136,11 @@ def get_index_schema() -> SearchIndex:
 
     similarity = BM25SimilarityAlgorithm()
 
+    semantic_search = SemanticSearch(
+        default_configuration_name="semantic-config",
+        configurations=semantic_configurations,
+    )
+
     vector_search = VectorSearch(
         algorithms=[
             HnswAlgorithmConfiguration(
@@ -171,7 +177,7 @@ def get_index_schema() -> SearchIndex:
         fields=fields,
         scoring_profiles=scoring_profiles,
         similarity=similarity,
-        semantic_settings=semantic_configurations,
+        semantic_search=semantic_search,
         vector_search=vector_search,
     )
     return index
