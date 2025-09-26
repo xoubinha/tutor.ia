@@ -3,6 +3,13 @@ import logging
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery
+from azure.search.documents.agent import KnowledgeAgentRetrievalClient
+from azure.search.documents.agent.models import (
+    KnowledgeAgentRetrievalRequest,
+    KnowledgeAgentMessage,
+    KnowledgeAgentMessageTextContent,
+    SearchIndexKnowledgeSourceParams,
+)
 from dotenv import load_dotenv
 from fastapi import APIRouter
 from openai import AzureOpenAI
@@ -14,7 +21,7 @@ from api.utils.prompts import (
     ANSWERING_SYSTEM_PROMPT,
     ANSWERING_USER_PROMPT,
 )
-from api.utils import get_subject
+from api.utils import get_subject, process_references
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -33,6 +40,14 @@ search_client = SearchClient(
     index_name=os.getenv("AZURE_SEARCH_INDEX_NAME"),
     credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_API_KEY")),
 )
+
+agent_client = KnowledgeAgentRetrievalClient(
+    endpoint=os.getenv("AZURE_SEARCH_ENDPOINT"),
+    agent_name=os.getenv("AZURE_KNOWLEDGE_AGENT_NAME"),
+    credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_API_KEY")),
+)
+
+AGENTIC_RETRIEVAL = os.getenv("AGENTIC_RETRIEVAL")
 
 
 class ChatHistory:
@@ -66,6 +81,60 @@ chat_history = ChatHistory()
 def handle_conversation(request: ConversationRequest):
     subject = get_subject(request.prompt)
     conversation = chat_history.get_conversation(request.conversation_id)
+
+    if AGENTIC_RETRIEVAL:
+        messages = [
+            {"role": "system", "content": ANSWERING_SYSTEM_PROMPT},
+        ]
+
+        for message in conversation:
+            messages.append({"role": message["role"], "content": message["content"]})
+
+        messages.append({"role": "user", "content": request.prompt})
+
+        request = KnowledgeAgentRetrievalRequest(
+            messages=[
+                KnowledgeAgentMessage(
+                    role=m["role"],
+                    content=[KnowledgeAgentMessageTextContent(text=m["content"])],
+                )
+                for m in messages
+                if m["role"] != "system"
+            ],
+            knowledge_source_params=[
+                SearchIndexKnowledgeSourceParams(
+                    knowledge_source_name=os.environ["AZURE_KNOWLEDGE_SOURCE_NAME"],
+                )
+            ],
+        )
+        result = agent_client.retrieve(
+            retrieval_request=request, api_version=os.environ["SEARCH_API_VERSION"]
+        )
+
+        response_parts = []
+        if getattr(result, "response", None):
+            for resp in result.response:
+                for content in getattr(resp, "content", []):
+                    text = (
+                        getattr(content, "text", None)
+                        or getattr(content, "value", None)
+                        or str(content)
+                    )
+                    response_parts.append(text)
+        response_content = (
+            "\n\n".join(response_parts)
+            if response_parts
+            else "No response found on 'result'"
+        )
+        response_content = process_references(
+            response_content,
+            result.references,
+            mode=os.getenv("AGENTIC_REFERENCES_MODE", "inline"),
+        )
+        messages.append({"role": "assistant", "content": response_content})
+
+        return ConversationResponse(response=response_content)
+
     condense_completion = openai_client.chat.completions.create(
         model=os.environ["AZURE_OPENAI_MODEL"],
         messages=[
