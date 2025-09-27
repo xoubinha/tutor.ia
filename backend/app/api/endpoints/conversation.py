@@ -86,13 +86,12 @@ def handle_conversation(request: ConversationRequest):
         messages = [
             {"role": "system", "content": ANSWERING_SYSTEM_PROMPT},
         ]
-
         for message in conversation:
             messages.append({"role": message["role"], "content": message["content"]})
 
         messages.append({"role": "user", "content": request.prompt})
 
-        request = KnowledgeAgentRetrievalRequest(
+        retrieval_request = KnowledgeAgentRetrievalRequest(
             messages=[
                 KnowledgeAgentMessage(
                     role=m["role"],
@@ -108,7 +107,8 @@ def handle_conversation(request: ConversationRequest):
             ],
         )
         result = agent_client.retrieve(
-            retrieval_request=request, api_version=os.environ["SEARCH_API_VERSION"]
+            retrieval_request=retrieval_request,
+            api_version=os.environ["SEARCH_API_VERSION"],
         )
 
         response_parts = []
@@ -131,7 +131,13 @@ def handle_conversation(request: ConversationRequest):
             result.references,
             mode=os.getenv("AGENTIC_REFERENCES_MODE", "inline"),
         )
-        messages.append({"role": "assistant", "content": response_content})
+        chat_history.update_conversation(
+            request.conversation_id,
+            [
+                {"role": "user", "content": request.prompt},
+                {"role": "assistant", "content": response_content},
+            ],
+        )
 
         return ConversationResponse(response=response_content)
 
